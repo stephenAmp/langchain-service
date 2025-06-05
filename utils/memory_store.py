@@ -5,7 +5,7 @@ from cachetools import TTLCache # For auto-expiry
 class InMemoryStore:
     def __init__(self, max_sessions=1000, expiry_time=3600):
         """
-        Max session refers to total sessions number memory can store
+        Max session refers to total sessions memory can store
         expiry time is time taken for memory to auto delete
         """
         # Initialize dictionary to store session memories
@@ -14,7 +14,7 @@ class InMemoryStore:
         # Create lock to make operations thread-safe
         self._lock = Lock()
 
-    def get_memory(self, session_id:str)-> ConversationBufferMemory:
+    def get_memory(self, session_id:str):
         # Thread-safe access to store dictionary
         with self._lock:
 
