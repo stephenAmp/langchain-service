@@ -1,47 +1,49 @@
-# Basic LLM chain
+# /llm_chain.py
+
 from llms.gemini_llm import get_llm
-from langchain.prompts import(
-ChatPromptTemplate, # For defining conversation structure 
-MessagesPlaceholder # for reserving spot in prompt for injection of memory (chat history)
-) 
-from langchain_core.messages import HumanMessage, SystemMessage # For assigning role to LLM in prompt
-from langchain_core.runnables import  RunnableMap, RunnableSequence # For chaining with langchain components pipe
-from langchain_core.runnables.history import RunnableWithMessageHistory # Ties history into chain
+from langchain.prompts import (
+    ChatPromptTemplate, 
+    MessagesPlaceholder
+)
+from langchain_core.runnables.history import RunnableWithMessageHistory
 import os
 from dotenv import load_dotenv
-from utils.memory_store import store #  script for handling memory store
+from utils.memory_store import store # The updated script for handling memory
 
 load_dotenv()
 
 #  Connecting prompts to LLM
 def build_chain():
+    """
+    Builds a LangChain runnable that includes chat history management.
+    """
+    # Define the prompt template for the conversation.
+    # It includes a system message to set the AI's role, a placeholder for chat history,
+    # and a placeholder for the user's current question.
     prompt = ChatPromptTemplate.from_messages([
-        SystemMessage(content="You are helpful movie recommendation assistant."),
-        MessagesPlaceholder(variable_name="chat_history"),("human","{question}")
+        ("system", "You are a helpful movie recommendation assistant."),
+        MessagesPlaceholder(variable_name="chat_history"),
+        ("human", "{question}")
     ])
 
-    # Create LLM instance
+    # Create an instance of the language model.
     llm = get_llm()
 
+    # Create the main chain by piping the prompt to the language model.
+    # The input to this chain is expected to be a dictionary containing 'question' and 'chat_history'.
+    chain = prompt | llm
 
-   # Properly wrap input dict to message list
-    input_mapper = RunnableMap({
-        "messages": lambda input: [
-            HumanMessage(content=(input["question"] if isinstance(input, dict) and 'question' in input else ""))
-        ]
-    })
-
-
-    # Chain without memory
-    chain = input_mapper | prompt | llm
-
-    # Wrap with memory from store
+    # Wrap the base chain with RunnableWithMessageHistory to add memory.
+    # This runnable automatically manages loading history for a session and saving new messages.
     chain_with_memory = RunnableWithMessageHistory(
         chain,
-        lambda session_id: store.get_memory(session_id),
+        # The factory function to get the history object for a given session_id.
+        # It now correctly retrieves the ChatMessageHistory object from our store.
+        lambda session_id: store.get_history(session_id),
+        # The key in the input dictionary that contains the user's message.
         input_messages_key="question",
+        # The key in the prompt template where the history should be injected.
         history_messages_key="chat_history"
     )
 
     return chain_with_memory
-
