@@ -11,8 +11,8 @@ def main():
         question = input("Ask a question (or 'exit'): ").strip()
         if question.lower() in ['exit','quit']:
             break
-        answer = chain.invoke({"question":question}, config={"configurable":{"session_id":session_id}})
-        print("\nAI: ", answer.content)
+        answer = chain.invoke({"input":question}, config={"configurable":{"session_id":session_id}})
+        print("\nAI: ", answer['output'])
 
 if __name__=='__main__':
     main()

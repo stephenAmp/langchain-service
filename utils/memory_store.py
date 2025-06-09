@@ -60,5 +60,5 @@ class InMemoryStore:
             self._store.clear()
 
 # Create a global instance of the store to be used throughout the application.
-# This "singleton" pattern ensures that all parts of the app share the same memory store.
+# This ensures that all parts of the app share the same memory store.
 store = InMemoryStore(max_sessions=1000, expiry_time=3600)
